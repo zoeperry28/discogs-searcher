@@ -5,6 +5,7 @@
 #include "data_from_webpage.hpp"
 #include "find_deals.hpp"
 #include "send_email.hpp"
+#include <chrono>
 
 std::string get_token_from_file () {
     std::string to_return = "";
@@ -47,7 +48,7 @@ int main() {
             user_data ud;
             j->DISCOGS_Get_Wantlist(&ud);
             size_t item_total = ud.all_wants.size();
-
+			
             // go through all items in the wantlist
             for (int i = 0 ; i < item_total; i++) {
                 run_python(ud.all_wants[i].id);
@@ -64,12 +65,13 @@ int main() {
                 
                 // now we have the best contender for a good deal on the item, it can be checked to see if it is valid
                 // also check that link hasnt already been sent
-                if ((best_deal.price != -1) && (std::find(all_links.begin(), all_links.end(),best_deal.link)==all_links.end())) { // valid
+                if ((best_deal.price != -1) && (std::find(all_links.begin(), all_links.end(),best_deal.link) == all_links.end())) { // valid
                     // a new, valid link
                     send_emails e(ud.all_wants[i], best_deal, found.image);
                     std::string link_found = e.send_data();
                     all_links.push_back(link_found);
                 }
+                system("pkill -o chromium");
             }
         }
     }

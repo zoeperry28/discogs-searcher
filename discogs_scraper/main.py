@@ -6,10 +6,16 @@ import time
 import datetime
 import os
 import re
+import getpass
 import data_obtained
+import webbrowser
 
-dump = "/home/zoe/Desktop/Discogs-Searcher/html_dump/"
+dump = "/home/" + getpass.getuser() + "/Desktop/discogs-searcher/html_dump/"
 
+
+def path () :
+    if not os.path.exists(dump):
+        os.makedirs(dump)
 # get marketplace listings for the item 
 def obtain_url_from_id(id):
     url = "https://www.discogs.com/sell/release/" + id + "?sort=price%2Casc&limit=250&ev=rb&page=1"
@@ -18,23 +24,13 @@ def obtain_url_from_id(id):
 ## ubuntu - get to page with the given id
 def control_from_chrome(url):
     #open chromium
-    pyautogui.keyDown('winleft');
-    pyautogui.keyUp('winleft');
-    pyautogui.typewrite('chromium');
-    pyautogui.keyDown('enter');
-    pyautogui.keyUp('enter');
-
-    # delay - then add a tab, enter url found and then enter - will bring up the page requested
-    time.sleep(1)
-    pyautogui.hotkey('ctrlright','t')
-    pyautogui.typewrite(url);
-    pyautogui.keyDown('enter');
-    pyautogui.keyUp('enter');
-    time.sleep(2)
+    webbrowser.open_new_tab(url)
+    time.sleep(10)
 
 def save_html_file(id):
     #save the html of the current page
     pyautogui.hotkey('ctrlright','s');
+    time.sleep(10)
     # delete current name
     pyautogui.hotkey('ctrlright','a');
     pyautogui.keyDown('backspace');
@@ -172,10 +168,7 @@ def get_prices_on_current_page(file_loc):
 
 def create_file_for_cpp_use(p_b):
     brackets = "{\"low\":" + p_b.low + ",\"med\":" + p_b.med + ",\"high\":" + p_b.high + ",\"image\":\"" + p_b.image +"\","; 
-    #extracted_links = "\"extracted\" : {\n\t\"image_link\":\"" + + "\",\n"},"
-    
     prices = "\"prices\":["
-    #del p_b.other[::2]
 
     for x in range(len(p_b.other)):
         prices = prices + "{ \"price\":" + p_b.other[x] + ", \"link\":\""+  p_b.links[x] + "\", \"availability\":" + str(p_b.is_available[x+3]) +"}";
@@ -191,6 +184,8 @@ def create_file_for_cpp_use(p_b):
 
 
 def main(argv):
+    time.sleep(5)
+    path()
     if (len(argv) == 1):
         url = obtain_url_from_id(argv[0])
         control_from_chrome(url);

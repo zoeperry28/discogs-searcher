@@ -1,6 +1,6 @@
 #include "discogs_requests.hpp"
 #include "interpret_json.hpp"
-#include "curl/curl.h"
+#include <curl/curl.h>
 
 std::string discogs::get_lowest_price_from_id(int id) {
     std::string url = base_url + "marketplace/" + "stats/" + std::to_string(id) + "?GBP" + token_url_to_append;
