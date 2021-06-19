@@ -12,7 +12,6 @@ import webbrowser
 
 dump = "/home/" + getpass.getuser() + "/Desktop/discogs-searcher/html_dump/"
 
-
 def path () :
     if not os.path.exists(dump):
         os.makedirs(dump)
@@ -25,12 +24,12 @@ def obtain_url_from_id(id):
 def control_from_chrome(url):
     #open chromium
     webbrowser.open_new_tab(url)
-    time.sleep(10)
+    time.sleep(10) # change to 10 for pi
 
 def save_html_file(id):
     #save the html of the current page
     pyautogui.hotkey('ctrlright','s');
-    time.sleep(10)
+    time.sleep(10) # 10 for pi
     # delete current name
     pyautogui.hotkey('ctrlright','a');
     pyautogui.keyDown('backspace');
@@ -108,7 +107,7 @@ def extract_additional (link_lines) :
     return item_link, image_link;
     
 def get_availability_info(fiIn):
-    available = [1,1,1]
+    available = []
     for line in fiIn:
         if (line.find("shortcut_navigable") != -1): # then this is a line we want to look at
             if (line.find("unavailable") != -1) :
@@ -125,44 +124,61 @@ def verify_prices(price_list) :
             new_price_list.append(price_list[i][0:ind+3])
         else :
             new_price_list.append(price_list[i])
-    return new_price_list;
+    return new_price_list[::2]
+            
+def keep_valid_link (available, links):
+    valid_links = []
+    i = 0;
+    for avail in available: 
+        if (avail == 1):
+            valid_links.append(links[i])
+        i = i + 1;
+    return valid_links
+
+
 def get_prices_on_current_page(file_loc):
 # Get links for item listings
     ## IMPORTANT! You can get both the link AND the image from here! very good for emails!
     link_lines = []
     price_lines = []
     new_lines = []
+    lmh = []
     fiIn = open((file_loc + ".html")).readlines()
     for lines in fiIn:
-        if (lines.find("?ev=bp_img") != -1):
+        if (lines.find("class=\"item_description_title\" data-followable=\"true\">") != -1):
             link_lines.append(lines)
-        if (lines.find("£") != -1) :
-            if ("about" in lines):
-                new_lines.append(lines)
-            elif (len(price_lines) < 3):
-                price_lines.append(lines)
+        if ((lines.find("total") != -1) and (lines.find("£") != -1)) :
+            price_lines.append(lines)
+        elif ((lines.find("£") != -1) and (len(lmh) != 3)) :
+            lmh.append(lines)
+
 
     result = extract_additional(link_lines);
     #clean up the lines to get the prices from the html
     i = 0;
-    del new_lines[::2]
+
     price_lines = price_lines + new_lines
     for found in price_lines:
         found = found.strip()
         price_lines[i] = exctract_price_from_line(found)
         i = i + 1
-
     price_lines[:] = (value for value in price_lines if value != -1)
     
     # this covers the case where an item may have never been sold
     ava = get_availability_info(fiIn)
+
+    lnk = keep_valid_link(ava, result[0])
     price_lines = verify_prices(price_lines)
-    if (len(price_lines) != 0) :
-        pb = data_obtained.Price_Brackets(price_lines[0],price_lines[1], price_lines[2], price_lines,[], ava, [])
-        pb.links = result[0]
-        pb.image = result[1]
-        if (len(price_lines) > 3) :
-            pb.other = price_lines[3:]
+
+    for x in range(len(lmh)):
+        lmh[x] = lmh[x].strip()
+        lmh[x] = exctract_price_from_line(lmh[x])
+
+    if (len(price_lines) + len(lmh) != 0) :
+        pb = data_obtained.Price_Brackets(lmh[0],lmh[1], lmh[2], price_lines ,[], ava, [])
+        pb.links = lnk
+        pb.image = ""
+        pb.other = price_lines
     
     return pb;
 
@@ -171,7 +187,7 @@ def create_file_for_cpp_use(p_b):
     prices = "\"prices\":["
 
     for x in range(len(p_b.other)):
-        prices = prices + "{ \"price\":" + p_b.other[x] + ", \"link\":\""+  p_b.links[x] + "\", \"availability\":" + str(p_b.is_available[x+3]) +"}";
+        prices = prices + "{ \"price\":" + p_b.other[x] + ", \"link\":\""+  p_b.links[x] + "\"}";
         if (x != len(p_b.other)-1) :
             prices = prices + ","
 
@@ -193,10 +209,10 @@ def main(argv):
         check = get_prices_on_current_page(name);
         create_file_for_cpp_use(check)
         time.sleep(3)
-    else :
-        url = obtain_url_from_id("5623194")
+    else : # DW = 3015526, DD = 5623194
+        url = obtain_url_from_id("778278")
         control_from_chrome(url);
-        name = save_html_file("5623194")
+        name = save_html_file("778278")
         check = get_prices_on_current_page(name);
         create_file_for_cpp_use(check)
         time.sleep(3)

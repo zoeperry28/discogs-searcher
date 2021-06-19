@@ -3,16 +3,19 @@
 #include "discogs_data.hpp"
 
 
+
 class deal {
     private:
         price_stats prices;
-    public:
-
         price_entry find_basic_deal() ;
-        double calculate_average_price();
+        price_entry calculate_average_price();
+        void database_entry();
+    public:
+        price_entry best_price() ;
         deal(price_stats  ps) {
             prices = ps;
         }
 };
+
 
 #endif

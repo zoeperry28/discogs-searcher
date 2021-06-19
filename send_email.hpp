@@ -1,7 +1,7 @@
 #ifndef __SEND_EMAIL_H__
 #define __SEND_EMAIL_H__
 #include "discogs_data.hpp"
-#include "find_deals.hpp"
+#include "notifications.hpp"
 #include "define_email.hpp"
 #include <iostream>
 #include <fstream>

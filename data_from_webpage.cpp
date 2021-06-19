@@ -19,13 +19,6 @@ price_stats json_to_structure::read_json_from_file () {
         price_entry pe;
         pe.price = j["prices"][i]["price"];
         pe.link = j["prices"][i]["link"];
-
-        if (j["prices"][i]["availability"] == 1) {
-            pe.available = true;
-        } else {
-            pe.available = false;
-        }
-
         ps.price_entries.push_back(pe);
     }
     std::cout << "done!\n";
